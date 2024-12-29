@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Colorful Chat Application</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(45deg, #ff9a9e, #fad0c4, #ffecd2);
+            animation: fadeIn 0.5s ease-out;
+        }
+        .container {
+            display: flex;
+            height: 100vh;
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        }
+        .sidebar {
+            width: 300px;
+            background: linear-gradient(to bottom, #a18cd1, #fbc2eb);
+            padding: 20px;
+            overflow-y: auto;
+            animation: slideIn 0.5s ease-out;
+        }
+        .chat-area {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: #fff;
+        }
+        .chat-header {
+            padding: 20px;
+            background: linear-gradient(to right, #ff9a9e, #fecfef);
+            color: white;
+            font-weight: bold;
+        }
+        .chat-messages {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: url('https://www.transparenttextures.com/patterns/cubes.png');
+        }
+        .chat-input {
+            padding: 20px;
+            background-color: #f8f8f8;
+            border-top: 1px solid #ddd;
+        }
+        .message {
+            margin-bottom: 15px;
+            padding: 10px 15px;
+            border-radius: 20px;
+            max-width: 70%;
+            animation: slideIn 0.3s ease-out;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        .sent {
+            background: linear-gradient(to right, #00b09b, #96c93d);
+            color: white;
+            align-self: flex-end;
+            margin-left: auto;
+        }
+        .received {
+            background: linear-gradient(to right, #e0eafc, #cfdef3);
+            color: #333;
+            align-self: flex-start;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+            animation: fadeIn 0.3s ease-out;
+        }
+        .modal-content {
+            background: linear-gradient(to bottom right, #ffffff, #f3e7e9);
+            margin: 15% auto;
+            padding: 20px;
+            border-radius: 15px;
+            width: 80%;
+            max-width: 500px;
+            animation: slideIn 0.3s ease-out;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            transition: color 0.3s ease;
+        }
+        .close:hover,
+        .close:focus {
+            color: #2c3e50;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .blurred-link {
+            filter: blur(3px);
+            cursor: pointer;
+            transition: filter 0.3s ease;
+        }
+        .blurred-link:hover {
+            filter: blur(2px);
+        }
+        .info-icon {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            background-color: #3498db;
+            color: white;
+            text-align: center;
+            border-radius: 50%;
+            margin-left: 5px;
+            line-height: 20px;
+            font-size: 14px;
+            transition: background-color 0.3s ease;
+        }
+        .info-icon:hover {
+            background-color: #2980b9;
+        }
+        .contact {
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .user-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        .user-list li {
+            margin-bottom: 10px;
+            padding: 10px;
+            background-color: rgba(255, 255, 255, 0.6);
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+        .user-list li:hover {
+            background-color: rgba(255, 255, 255, 0.8);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        #add-contact-form {
+            margin-top: 20px;
+        }
+        #add-contact-form input {
+            width: 70%;
+            padding: 5px;
+            margin-right: 5px;
+            border: none;
+            border-radius: 5px;
+        }
+        #add-contact-form button {
+            width: 25%;
+            padding: 5px;
+            background: linear-gradient(to right, #4CAF50, #45a049);
+            border: none;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        #add-contact-form button:hover {
+            background: linear-gradient(to right, #45a049, #4CAF50);
+            transform: scale(1.05);
+        }
+        #message-form textarea {
+            width: 80%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            margin-right: 10px;
+        }
+        #message-form textarea:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 5px rgba(52, 152, 219, 0.5);
+        }
+        #message-form button {
+            width: 15%;
+            background: linear-gradient(to right, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        #message-form button:hover {
+            background: linear-gradient(to right, #2980b9, #3498db);
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <h2>Welcome, {{ username }}</h2>
+            <h3>Contacts</h3>
+            <ul class="user-list" id="contact-list">
+                {% for contact in contacts %}
+                    <li class="contact">
+                        <a href="{{ url_for('chat', contact_id=contact['user_id']) }}">{{ contact['user_id'] }}</a>
+                    </li>
+                {% endfor %}
+            </ul>
+            <h3>Add Contact</h3>
+            <form id="add-contact-form">
+                <input type="text" id="new-contact-id" placeholder="Enter user ID">
+                <button type="submit">Add</button>
+            </form>
+            <a href="{{ url_for('logout') }}">Logout</a>
+        </div>
+        <div class="chat-area">
+            <div class="chat-header">
+                <h3>Chat with {{ selected_contact }}</h3>
+            </div>
+            <div class="chat-messages" id="chat-messages">
+                {% for msg in chat_history %}
+                    <div class="message {% if msg.is_sender %}sent{% else %}received{% endif %}">
+                        <strong>{{ 'You' if msg.is_sender else msg.sender }}:</strong>
+                        {% if msg.message %}
+                            <p>
+                                {% if msg.links %}
+                                    {% for link in msg.links %}
+                                        {% if msg.is_sender or link.trusted %}
+                                            <a href="{{ link.url }}" target="_blank">{{ link.url }}</a>
+                                        {% else %}
+                                            <span class="blurred-link" data-url="{{ link.url }}">
+                                                [Blurred Link]
+                                                <span class="info-icon">i</span>
+                                            </span>
+                                        {% endif %}
+                                    {% endfor %}
+                                {% else %}
+                                    {{ msg.message }}
+                                {% endif %}
+                            </p>
+                        {% endif %}
+                        {% if msg.file_path %}
+                            <p><a href="{{ url_for('download_file', file_id=msg['_id']) }}">Download File</a></p>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+            <div class="chat-input">
+                <form id="message-form" method="POST" action="{{ url_for('send_message') }}" enctype="multipart/form-data">
+                    <input type="hidden" name="receiver" value="{{ selected_contact }}">
+                    <textarea name="message" placeholder="Type a message..."></textarea>
+                    <input type="file" name="file" style="display: none;" id="file-input">
+                    <label for="file-input" style="cursor: pointer;">📎</label>
+                    <button type="submit">Send</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="warning-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h4>Warning</h4>
+            <p>This link may be harmful. Do you want to proceed?</p>
+            <p id="link-display"></p>
+            <button id="view-link">View Link</button>
+            <button id="add-contact">Add Contact</button>
+            <button id="block-contact">Block Contact</button>
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            var currentUrl = '';
+            var currentSender = '';
+
+            $('.blurred-link').on('click', function() {
+                currentUrl = $(this).data('url');
+                currentSender = $(this).closest('.message').find('strong').text().replace(':', '');
+                $('#warning-modal').show();
+                $('#link-display').text('Link: ' + currentUrl).hide();
+            });
+
+            $('#view-link').on('click', function() {
+                $('#link-display').show();
+                $(this).text('Open Link');
+                $(this).off('click').on('click', function() {
+                    window.open(currentUrl, '_blank');
+                });
+            });
+
+            $('#add-contact').on('click', function() {
+                addContact(currentSender);
+            });
+
+            $('#block-contact').on('click', function() {
+                blockContact(currentSender);
+            });
+
+            $('.close').on('click', function() {
+                $('.modal').hide();
+                $('#link-display').hide();
+                $('#view-link').text('View Link');
+            });
+
+            $('#add-contact-form').on('submit', function(e) {
+                e.preventDefault();
+                var contactId = $('#new-contact-id').val();
+                addContact(contactId);
+            });
+
+            function addContact(contactId) {
+                $.post('/add_contact', { contact_id: contactId }, function(data) {
+                    if (data.status === 'success') {
+                        alert('Contact added successfully');
+                        location.reload();
+                    } else {
+                        alert('Error adding contact: ' + data.message);
+                    }
+                });
+                $('.modal').hide();
+            }
+
+            function blockContact(contactId) {
+                $.post('/block_contact', { contact_id: contactId }, function(data) {
+                    if (data.status === 'success') {
+                        alert('Contact blocked successfully');
+                        location.reload();
+                    } else {
+                        alert('Error blocking contact');
+                    }
+                });
+                $('.modal').hide();
+            }
+
+            // Auto-scroll to the bottom of the chat messages
+            var chatMessages = document.getElementById('chat-messages');
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            // Submit message form using AJAX
+            $('#message-form').on('submit', function(e) {
+                e.preventDefault();
+                var formData = new FormData(this);
+                $.ajax({
+                    url: $(this).attr('action'),
+                    type: 'POST',
+                    data: formData,
+                    success: function(response) {
+                        // Reload only the chat messages
+                        $('#chat-messages').load(location.href + ' #chat-messages>*', function() {
+                            chatMessages.scrollTop = chatMessages.scrollHeight;
+                        });
+                        // Clear the message input
+                        $('textarea[name="message"]').val('');
+                        $('input[name="file"]').val('');
+                    },
+                    cache: false,
+                    contentType: false,
+                    processData: false
+                });
+            });
+
+            // Add pulse animation to new messages
+            function addPulseAnimation() {
+                $('.message').last().css('animation', 'pulse 0.5s');
+                setTimeout(function() {
+                    $('.message').last().css('animation', '');
+                }, 500);
+            }
+
+            // Call addPulseAnimation after each new message
+            var observer = new MutationObserver(function(mutations) {
+                mutations.forEach(function(mutation) {
+                    if (mutation.type === 'childList') {
+                        addPulseAnimation();
+                    }
+                });
+            });
+
+            observer.observe(chatMessages, { childList: true });
+        });
+    </script>
+</body>
+</html>

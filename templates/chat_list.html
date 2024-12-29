@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>Chat</title>
+</head>
+<body>
+    <div class="chat-page-container">
+        <div class="chat-list-container">
+            <h2>Contacts</h2>
+            <p>Logged in as: {{ current_user }}</p>
+            <ul>
+                {% for contact in contacts %}
+                    <li>
+                        <a href="{{ url_for('chat_list', receiver=contact.contact) }}">
+                            {{ contact.contact }}
+                        </a>
+                        <form action="{{ url_for('delete_contact', contact=contact.contact) }}" method="POST" style="display:inline;">
+                            <button type="submit" class="delete-btn">Delete</button>
+                        </form>
+                    </li>
+                {% endfor %}
+            </ul>
+
+            <form method="POST" action="{{ url_for('add_contact') }}">
+                <input type="text" name="new_contact" placeholder="Enter mobile number" required>
+                <button type="submit">Add Contact</button>
+            </form>
+            
+            <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
+        </div>
+
+        <div class="chat-container">
+            {% if receiver %}
+                <h2>Chat with {{ receiver }}</h2>
+                <div class="chat-history">
+                    {% for message in chat_history %}
+                        <div class="message {{ 'sent' if message.sender == session['user'] else 'received' }}">
+                            {% if message.is_link %}
+                                <div class="blurred-message">
+                                    <img src="{{ url_for('static', filename='info_icon.png') }}" class="info-icon" title="This message contains a link. Tap to view." onclick="viewLink('{{ message._id }}')">
+                                </div>
+                            {% else %}
+                                <p>{{ message.message }}</p>
+                            {% endif %}
+                            <span class="timestamp">{{ message.timestamp }}</span>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <form method="POST" enctype="multipart/form-data">
+                    <input type="text" name="message" placeholder="Type your message here...">
+                    <input type="file" name="media">
+                    <button type="submit">Send</button>
+                </form>
+            {% else %}
+                <p>Select a contact to start chatting.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        function viewLink(messageId) {
+            if (confirm('This message contains a link. Do you want to view it?')) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = "{{ url_for('view_link') }}";
+
+                const messageIdInput = document.createElement('input');
+                messageIdInput.type = 'hidden';
+                messageIdInput.name = 'message_id';
+                messageIdInput.value = messageId;
+
+                form.appendChild(messageIdInput);
+
+                const actionInput = document.createElement('input');
+                actionInput.type = 'hidden';
+                actionInput.name = 'action';
+                actionInput.value = 'ok';
+
+                form.appendChild(actionInput);
+
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+    </script>
+</body>
+</html>
